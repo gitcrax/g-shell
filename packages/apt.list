@@ -1,0 +1,5 @@
+
+# List of APT packages to be installed on boot
+# Format: One package per line. Comments (#) are ignored.
+tty-clock
+ripgrep

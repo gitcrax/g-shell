@@ -146,6 +146,3 @@ export PATH=$PATH:$HOME/.local/bin
 if [ -f "/google/devshell/bashrc.google" ]; then
   source "/google/devshell/bashrc.google"
 fi
-
-# G-Shell Helpers
-alias persist='~/g-shell/scripts/persist.sh'
