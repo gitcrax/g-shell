@@ -70,14 +70,22 @@ install_shell_enhancements() {
     printf 'n\ny\ny\n' | bash "$HOME/.fancy-git/install.sh"
     info "  - fancy-git installed."
 
-    # Tmux Plugin Manager (TPM) & Plugins
+    # gpakosz/.tmux (Oh My Tmux!) integration
+    if [ ! -d "$HOME/.tmux" ]; then
+        info "  - Cloning gpakosz/.tmux (Oh My Tmux!)..."
+        git clone --single-branch https://github.com/gpakosz/.tmux.git "$HOME/.tmux"
+        info "  - gpakosz/.tmux cloned."
+    else
+        info "  - gpakosz/.tmux already present. Skipping clone."
+    fi
+
+    # Tmux Plugin Manager (TPM)
+    # We install it inside ~/.tmux/plugins for compatibility
     if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
         info "  - Cloning Tmux Plugin Manager (TPM)..."
-        mkdir -p $HOME/.tmux/plugins/tpm
+        mkdir -p "$HOME/.tmux/plugins/tpm"
         git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
         info "  - TPM cloned."
-    else
-        info "  - TPM already present. Skipping clone."
     fi
 }
 
@@ -247,7 +255,11 @@ main() {
     install_termdown
     setup_nvm_and_node
     install_persistent_binaries
-    install_persistent_binaries
+
+    # Setup gpakosz/.tmux symlinks
+    info "Setting up gpakosz/.tmux symlinks..."
+    ln -sf "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
+    info "  - Note: Customizations should be made in ~/g-shell/dotfiles/.tmux.conf.local"
 
     info "----------------------------------------------------------------"
     info "Persistent environment created!"

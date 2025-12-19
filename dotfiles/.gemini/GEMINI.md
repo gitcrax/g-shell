@@ -16,7 +16,7 @@ This file provides the context, rules, and operational guidelines for the Gemini
 *   **`install.sh`**: The one-time setup script.
     *   Deploys `dotfiles/` to `$HOME`.
     *   Installs static binaries to `~/.local/bin` (Neovim, Lazygit, Yazi, Fastfetch, Resterm, 7zz).
-    *   Installs `nvm` and Python tools (`termdown`).
+    *   Installs `nvm`, `gpakosz/.tmux`, and Python tools (`termdown`).
 *   **`~/.customize_environment`**: The startup script.
     *   Maintained in repo as `dotfiles/.customize_environment`.
     *   Executes as root on session start.

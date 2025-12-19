@@ -33,6 +33,7 @@ The environment comes pre-configured with modern CLI tools:
 | **7zip** | Archiver | `~/.local/bin/7zz` | ✅ Persistent (Static Binary) |
 | **Termdown** | Timer | `~/.local/bin/termdown` | ✅ Persistent (Pip User) |
 | **Node.js** | Runtime | `~/.nvm` | ✅ Persistent (NVM) |
+| **tmux-config** | Theme/UI | `~/.tmux_gpakosz` | ✅ Persistent (Symlink) |
 | **Ripgrep** | Search | `/usr/bin/rg` | 🔄 Re-installed on boot |
 | **TTY-Clock** | Clock | `/usr/bin/tty-clock` | 🔄 Re-installed on boot |
 
