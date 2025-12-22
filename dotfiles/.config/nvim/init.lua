@@ -30,10 +30,3 @@ vim.diagnostic.config({
   underline = true,
   update_in_insert = false
 })
-
-vim.api.nvim_create_autocmd({"BufLeave", "FocusLost"}, {
-  pattern = "*",
-  callback = function()
-    vim.cmd("silent! wa")
-  end
-})

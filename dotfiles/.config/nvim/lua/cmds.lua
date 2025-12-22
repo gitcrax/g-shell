@@ -44,15 +44,3 @@ vim.api.nvim_create_autocmd('ModeChanged', {
     pcall(vim.diagnostic.show)
   end
 })
-
-vim.api.nvim_create_user_command('MasonInstallAll', function()
-  local mason_spec = require('plugins.mason')
-  if mason_spec and mason_spec.opts and mason_spec.opts.ensure_installed then
-    vim.notify('Installing Mason packages, please wait...', vim.log.levels.INFO)
-    require('mason.settings').set({
-      ensure_installed = mason_spec.opts.ensure_installed,
-    })
-  else
-    vim.notify('No packages found in plugins.mason ensure_installed.', vim.log.levels.WARN)
-  end
-end, { desc = 'Installs all packages from plugins.mason' })

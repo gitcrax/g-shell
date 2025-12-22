@@ -47,7 +47,7 @@ keymap = [
 	{ on = "<C-a>",   run = "toggle_all --state=on", desc = "Select all files" },
 	{ on = "<C-r>",   run = "toggle_all",            desc = "Invert selection of all files" },
 
-	# Visual mode
+    # Visual mode
 	{ on = "v", run = "visual_mode",         desc = "Enter visual mode (selection mode)" },
 	{ on = "V", run = "visual_mode --unset", desc = "Enter visual mode (unset mode)" },
 
@@ -55,7 +55,7 @@ keymap = [
 	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
 	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
 
-	# Spotting
+    # Spotting
 	{ on = "<Tab>", run = "spot", desc = "Spot hovered file" },
 
 	# Operation
@@ -105,8 +105,8 @@ keymap = [
 	# Find
 	{ on = "/", run = "find --smart",            desc = "Find next file" },
 	{ on = "?", run = "find --previous --smart", desc = "Find previous file" },
-	{ on = "n", run = "find_arrow",              desc = "Goto the next found" },
-	{ on = "N", run = "find_arrow --previous",   desc = "Goto the previous found" },
+	{ on = "n", run = "find_arrow",              desc = "Go to the next found" },
+	{ on = "N", run = "find_arrow --previous",   desc = "Go to the previous found" },
 
 	# Sorting
 	{ on = [ ",", "m" ], run = [ "sort mtime --reverse=no", "linemode mtime" ], desc = "Sort by modified time" },
@@ -124,10 +124,14 @@ keymap = [
 	{ on = [ ",", "r" ], run = "sort random --reverse=no",                      desc = "Sort randomly" },
 
 	# Goto
-	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go home" },
-	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Goto ~/.config" },
-	{ on = [ "g", "d" ],       run = "cd ~/Downloads",   desc = "Goto ~/Downloads" },
-	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Jump interactively" },
+	{ on = [ "g", "h" ],       run = "cd ~",             desc = "Go to the home directory" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "Go to the config directory" },
+	{ on = [ "g", "d" ],       run = "cd /run/media/z0mbi3/windows/Descargas",   desc = "Go to the downloads directory" },
+	{ on = [ "g", "i" ],       run = "cd /run/media/z0mbi3/windows/Imagenes", desc = "Go to the images directory" },
+	{ on = [ "g", "v" ],       run = "cd /run/media/z0mbi3/windows/Videos", desc = "Go to the video directory" },
+	{ on = [ "g", "f" ],       run = "cd /run/media/z0mbi3/windows/Documentos", desc = "Go to the documents directory" },
+	{ on = [ "g", "l" ],       run = "cd /run/media/z0mbi3/windows/Linux", desc = "Go to the Linux directory" },
+	{ on = [ "g", "<Space>" ], run = "cd --interactive", desc = "Go to a directory interactively" },
 
 	# Tabs
 	{ on = "t", run = "tab_create --current", desc = "Create a new tab with CWD" },
@@ -359,3 +363,13 @@ keymap = [
 	# Filtering
 	{ on = "f", run = "filter", desc = "Apply a filter for the help items" },
 ]
+
+[[manager.prepend_keymap]]
+on   = "l"
+run  = "plugin smart-enter"
+desc = "Enter the child directory, or open the file"
+
+[[manager.prepend_keymap]]
+on   = "<RIGHT>"
+run  = "plugin smart-enter"
+desc = "Enter the child directory, or open the file"

@@ -4,8 +4,6 @@ vim.g.maplocalleader = ' '
 
 -- Save current file
 map("n", "<leader>w", ":w<cr>", { desc = "Save file", remap = true })
-map("n", "<C-s>", ":w<CR>", { desc = "Save file" })
-map("i", "<C-s>", "<ESC>:w<CR>", { desc = "Save file", noremap = true })
 
 -- ESC pressing jk
 map("i", "jk", "<ESC>", { desc = "jk to esc", noremap = true })
@@ -30,13 +28,6 @@ map("n", "te", ":tabedit")
 -- Split window
 map("n", "<leader>sh", ":split<Return><C-w>w", { desc = "splits horizontal", noremap = true })
 map("n", "<leader>sv", ":vsplit<Return><C-w>w", { desc = "Split vertical", noremap = true })
-
--- Open terminal
-map("n", "<leader>t", function()
-  vim.cmd("botright split")
-  vim.cmd("resize " .. math.floor(vim.o.lines * 0.25))
-  vim.cmd("terminal")
-end, { desc = "Open terminal", noremap = true })
 
 -- Navigate vim panes better
 map("n", "<C-k>", "<C-w>k", { desc = "Navigate up" })
