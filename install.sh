@@ -170,12 +170,15 @@ install_persistent_binaries() {
     mkdir -p "$BIN_DIR"
 
     # --- Neovim ---
-    if is_binary_installed "nvim"; then
+    # We check for both the binary and the runtime to ensure a complete installation
+    if is_binary_installed "nvim" && [ -d "$HOME/.local/share/nvim/runtime" ]; then
         info "  - Neovim already installed. Skipping."
     else
-        info "  - Installing Neovim from local archive..."
+        info "  - Installing/Repairing Neovim from local archive..."
         local nvim_archive="$SCRIPT_DIR/bin/nvim-linux-x86_64.tar.gz"
         if [ -f "$nvim_archive" ]; then
+            # Clean up potentially broken runtime before extraction
+            rm -rf "$HOME/.local/share/nvim/runtime"
             tar -xzf "$nvim_archive" -C "$HOME/.local/" --strip-components=1
             info "    - Neovim installed."
         else

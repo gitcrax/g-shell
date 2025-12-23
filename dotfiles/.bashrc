@@ -141,7 +141,7 @@ function y() {
 
 
 . ~/.fancy-git/prompt.sh
-export PATH=$PATH:$HOME/.local/bin
+export PATH=$HOME/.local/bin:$PATH
 
 if [ -f "/google/devshell/bashrc.google" ]; then
   source "/google/devshell/bashrc.google"
