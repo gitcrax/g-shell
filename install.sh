@@ -47,11 +47,22 @@ setup_configs_and_dotfiles() {
 
     # Copy dotfiles (e.g., .bashrc, .vimrc)
     find "$DOTFILES_DIR" -maxdepth 1 -type f -name ".*" -exec cp {} "$HOME/" \;
+
+    # Ensure .customize_environment is correctly placed and executable
+    if [ -f "$DOTFILES_DIR/.customize_environment" ]; then
+        cp "$DOTFILES_DIR/.customize_environment" "$HOME/.customize_environment"
+        chmod +x "$HOME/.customize_environment"
+        info "  - .customize_environment deployed and made executable."
+    fi
     info "  - Dotfiles copied."
 
     # Copy dot directories (e.g., .config, .gemini)
     find "$DOTFILES_DIR" -maxdepth 1 -type d -name ".*" -exec cp -r {} "$HOME/" \;
     info "  - Dot directories copied."
+
+    # Create persistent Docker root
+    mkdir -p "$HOME/.docker_root"
+    info "  - Persistent Docker root directory created."
 }
 
 # 2. Install shell enhancements

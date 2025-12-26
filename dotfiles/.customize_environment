@@ -50,6 +50,31 @@ if [ -d "$OVERLAY_DIR" ]; then
     # The ending / on source ensures we copy contents, not the dir itself.
     sudo cp -Rv "${OVERLAY_DIR}/." /
     echo "Root overlay applied."
+
+    # --- 2.1 Persistent Docker Setup (Bind Mount) ---
+    # This approach is the most reliable in Cloud Shell environments.
+    # It maps your persistent home directory directly into Docker's internal path.
+    DOCKER_PERSIST_DIR="${USER_HOME}/.docker_root"
+    DOCKER_SYSTEM_DIR="/var/lib/docker"
+
+    echo "Ensuring persistent Docker storage at ${DOCKER_PERSIST_DIR}..."
+    mkdir -p "${DOCKER_PERSIST_DIR}"
+
+    echo "Stopping Docker to swap data directory..."
+    sudo systemctl stop docker.socket || true
+    sudo systemctl stop docker || true
+
+    # Only mount if not already mounted
+    if ! mountpoint -q "${DOCKER_SYSTEM_DIR}"; then
+        echo "Mounting ${DOCKER_PERSIST_DIR} to ${DOCKER_SYSTEM_DIR}..."
+        # We must clear the system dir first to avoid merging issues
+        sudo rm -rf "${DOCKER_SYSTEM_DIR}"/*
+        sudo mount --bind "${DOCKER_PERSIST_DIR}" "${DOCKER_SYSTEM_DIR}"
+    fi
+
+    echo "Starting Docker service..."
+    sudo systemctl start docker
+    echo "Docker persistence initialized via bind-mount."
 else
     echo "No root_overlay directory found. Skipping."
 fi
