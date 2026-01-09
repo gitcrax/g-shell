@@ -37,13 +37,6 @@ When modifying **existing executable code** or **configuration files**, you **MU
 1.  **Analyze**: Identify the specific block to change.
 2.  **Scope**: Keep the context window small.
 3.  **Inject**: Use `write_to_file` or `replace_file_content` to insert:
-    ```text
-    <<<<<<< HEAD
-    [Original Code]
-    =======
-    [Proposed Change]
-    >>>>>>> [descriptive-slug]
-    ```
 4.  **Notify**: "✅ **Change Injected**: `[Filename]`. Please review."
 
 **Exceptions (Direct Overwrite Allowed):**

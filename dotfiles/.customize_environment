@@ -75,6 +75,37 @@ if [ -d "$OVERLAY_DIR" ]; then
     echo "Starting Docker service..."
     sudo systemctl start docker
     echo "Docker persistence initialized via bind-mount."
+
+    # --- 2.2 Persistent MariaDB Setup (Bind Mount) ---
+    MYSQL_PERSIST_DIR="${USER_HOME}/.mysql_root"
+    MYSQL_SYSTEM_DIR="/var/lib/mysql"
+
+    echo "Ensuring persistent MariaDB storage at ${MYSQL_PERSIST_DIR}..."
+    mkdir -p "${MYSQL_PERSIST_DIR}"
+
+    echo "Stopping MariaDB to swap data directory..."
+    sudo systemctl stop mariadb || true
+
+    # Only mount if not already mounted
+    if ! mountpoint -q "${MYSQL_SYSTEM_DIR}"; then
+        echo "Mounting ${MYSQL_PERSIST_DIR} to ${MYSQL_SYSTEM_DIR}..."
+        # If the persistent dir is empty, seed it with current data
+        if [ -z "$(ls -A "${MYSQL_PERSIST_DIR}")" ]; then
+             echo "Seeding ${MYSQL_PERSIST_DIR} with default MariaDB data..."
+             sudo cp -Ra "${MYSQL_SYSTEM_DIR}/." "${MYSQL_PERSIST_DIR}/"
+        fi
+        
+        # Clear the system dir and mount
+        sudo rm -rf "${MYSQL_SYSTEM_DIR:?}"/*
+        sudo mount --bind "${MYSQL_PERSIST_DIR}" "${MYSQL_SYSTEM_DIR}"
+    fi
+
+    # Ensure correct permissions
+    sudo chown -R mysql:mysql "${MYSQL_SYSTEM_DIR}"
+
+    echo "Starting MariaDB service..."
+    sudo systemctl start mariadb
+    echo "MariaDB persistence initialized via bind-mount."
 else
     echo "No root_overlay directory found. Skipping."
 fi

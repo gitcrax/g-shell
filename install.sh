@@ -63,6 +63,10 @@ setup_configs_and_dotfiles() {
     # Create persistent Docker root
     mkdir -p "$HOME/.docker_root"
     info "  - Persistent Docker root directory created."
+
+    # Create persistent MySQL root
+    mkdir -p "$HOME/.mysql_root"
+    info "  - Persistent MySQL root directory created."
 }
 
 # 2. Install shell enhancements
