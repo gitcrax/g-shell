@@ -64,10 +64,25 @@ setup_configs_and_dotfiles() {
     mkdir -p "$HOME/.docker_root"
     info "  - Persistent Docker root directory created."
 
-    # Create persistent MySQL root
-    mkdir -p "$HOME/.mysql_root"
-    info "  - Persistent MySQL root directory created."
+    setup_mysql_persistence
 }
+
+# 2. Setup MySQL Persistence structure
+setup_mysql_persistence() {
+    info "Setting up MySQL persistence structure..."
+    local MYSQL_DIR="$HOME/.mysql_root"
+    local BACKUP_DIR="$MYSQL_DIR/backup"
+    
+    mkdir -p "$BACKUP_DIR"
+    
+    if [ ! -f "$MYSQL_DIR/.env" ]; then
+        info "  - Creating default .mysql_root/.env file..."
+        echo "MYSQL_ROOT_PASSWORD=root" > "$MYSQL_DIR/.env"
+        chmod 600 "$MYSQL_DIR/.env"
+    fi
+    info "  - MySQL persistence structure ready."
+}
+
 
 # 2. Install shell enhancements
 install_shell_enhancements() {
@@ -279,14 +294,17 @@ main() {
     ln -sf "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
     info "  - Note: Customizations should be made in ~/g-shell/dotfiles/.tmux.conf.local"
 
+    # Link custom scripts
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$HOME/g-shell/scripts/mysql-backup.sh" "$HOME/.local/bin/mysql-backup"
+    chmod +x "$HOME/g-shell/scripts/mysql-backup.sh"
+
     info "----------------------------------------------------------------"
     info "Persistent environment created!"
     warn "ACTION REQUIRED: Please restart your Google Cloud Shell session."
     info "The newly created '~/.customize_environment' script will run on the next startup to install system packages."
     info "----------------------------------------------------------------"
 
-    source ~/.bashrc
-    bash ~/.customize_environment
     # Apply tmux changes to current session if possible
     if tmux info &> /dev/null; then
         info "Applying new tmux configuration to the running server..."

@@ -21,7 +21,18 @@ export DEBIAN_FRONTEND=noninteractive
 
 APT_LIST="${SOURCE_REPO}/packages/apt.list"
 
+# Function to wait for apt locks to be released
+wait_for_apt_lock() {
+    echo "Checking for apt lock..."
+    while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+        echo "Apt lock detected, waiting 5 seconds..."
+        sleep 5
+    done
+    echo "Apt lock is free."
+}
+
 if [ -f "$APT_LIST" ]; then
+    wait_for_apt_lock
     echo "Updating apt cache..."
     sudo apt-get update
 
@@ -29,6 +40,7 @@ if [ -f "$APT_LIST" ]; then
     PACKAGES=$(grep -vE '^\s*#|^\s*$' "$APT_LIST" | tr '\n' ' ')
     
     if [ -n "$PACKAGES" ]; then
+        wait_for_apt_lock
         echo "Installing persistent packages: $PACKAGES"
         # shellcheck disable=SC2086
         sudo apt-get install -y $PACKAGES
@@ -76,36 +88,67 @@ if [ -d "$OVERLAY_DIR" ]; then
     sudo systemctl start docker
     echo "Docker persistence initialized via bind-mount."
 
-    # --- 2.2 Persistent MariaDB Setup (Bind Mount) ---
-    MYSQL_PERSIST_DIR="${USER_HOME}/.mysql_root"
-    MYSQL_SYSTEM_DIR="/var/lib/mysql"
+    # --- 2.2 Persistent MySQL Setup (Restore from Backup) ---
+    MYSQL_ROOT_DIR="${USER_HOME}/.mysql_root"
+    MYSQL_BACKUP_DIR="${MYSQL_ROOT_DIR}/backup"
+    MYSQL_PRIMARY_BACKUP="${MYSQL_BACKUP_DIR}/mysql-backup.tar.gz"
+    MYSQL_FAILSAFE_BACKUP="${MYSQL_BACKUP_DIR}/mysql-backup-failsafe.tar.gz"
+    MYSQL_DATA_DIR="/var/lib/mysql"
+    MYSQL_ENV_FILE="${MYSQL_ROOT_DIR}/.env"
 
-    echo "Ensuring persistent MariaDB storage at ${MYSQL_PERSIST_DIR}..."
-    mkdir -p "${MYSQL_PERSIST_DIR}"
+    # Load root password
+    if [ -f "${MYSQL_ENV_FILE}" ]; then
+        MYSQL_ROOT_PASSWORD=$(grep 'MYSQL_ROOT_PASSWORD=' "${MYSQL_ENV_FILE}" | cut -d= -f2-)
+    fi
+    MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-root}" # Default if not found
 
-    echo "Stopping MariaDB to swap data directory..."
-    sudo systemctl stop mariadb || true
-
-    # Only mount if not already mounted
-    if ! mountpoint -q "${MYSQL_SYSTEM_DIR}"; then
-        echo "Mounting ${MYSQL_PERSIST_DIR} to ${MYSQL_SYSTEM_DIR}..."
-        # If the persistent dir is empty, seed it with current data
-        if [ -z "$(ls -A "${MYSQL_PERSIST_DIR}")" ]; then
-             echo "Seeding ${MYSQL_PERSIST_DIR} with default MariaDB data..."
-             sudo cp -Ra "${MYSQL_SYSTEM_DIR}/." "${MYSQL_PERSIST_DIR}/"
-        fi
-        
-        # Clear the system dir and mount
-        sudo rm -rf "${MYSQL_SYSTEM_DIR:?}"/*
-        sudo mount --bind "${MYSQL_PERSIST_DIR}" "${MYSQL_SYSTEM_DIR}"
+    SELECTED_BACKUP=""
+    if [ -f "${MYSQL_PRIMARY_BACKUP}" ]; then
+        SELECTED_BACKUP="${MYSQL_PRIMARY_BACKUP}"
+    elif [ -f "${MYSQL_FAILSAFE_BACKUP}" ]; then
+        echo "Primary backup missing, using failsafe..."
+        SELECTED_BACKUP="${MYSQL_FAILSAFE_BACKUP}"
     fi
 
-    # Ensure correct permissions
-    sudo chown -R mysql:mysql "${MYSQL_SYSTEM_DIR}"
+    echo "Stopping MySQL/MariaDB services for restoration..."
+    sudo systemctl stop mariadb || true
+    sudo systemctl stop mysql || true
 
-    echo "Starting MariaDB service..."
-    sudo systemctl start mariadb
-    echo "MariaDB persistence initialized via bind-mount."
+    if [ -n "${SELECTED_BACKUP}" ]; then
+        echo "Restoring MySQL data from ${SELECTED_BACKUP}..."
+        sudo rm -rf "${MYSQL_DATA_DIR:?}/"*
+        sudo tar -xzf "${SELECTED_BACKUP}" -C /
+        echo "MySQL data restored."
+    else
+        echo "No backup found. Initializing fresh MariaDB data directory..."
+        sudo mkdir -p "${MYSQL_DATA_DIR}"
+    fi
+
+    echo "Setting permissions and starting service..."
+    sudo chown -R mysql:mysql "${MYSQL_DATA_DIR}"
+    sudo chmod -R 755 "${MYSQL_DATA_DIR}"
+    
+    # Start service
+    if command -v systemctl >/dev/null; then
+        sudo systemctl start mariadb
+    else
+        sudo service mariadb start
+    fi
+
+    # Wait for MySQL to be ready
+    for i in {1..30}; do
+        if mysqladmin ping -u root --silent; then break; fi
+        sleep 1
+    done
+
+    # Set root password from .env
+    echo "Updating root password..."
+    sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; FLUSH PRIVILEGES;" || true
+
+    # --- 2.3 Periodic Backup Setup (Cron) ---
+    echo "Setting up periodic MySQL backups (every 30 mins)..."
+    CRON_CMD="*/30 * * * * ${USER_HOME}/.local/bin/mysql-backup ${USER_HOME} >> ${USER_HOME}/mysql-backup.log 2>&1"
+    (crontab -l -u "${SUDO_USER:-$USER}" 2>/dev/null | grep -v "mysql-backup"; echo "${CRON_CMD}") | crontab -u "${SUDO_USER:-$USER}" -
 else
     echo "No root_overlay directory found. Skipping."
 fi
